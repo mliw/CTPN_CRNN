@@ -69,10 +69,8 @@ class CTPN:
         self._build_net()
 
     def _build_net(self):
-        vgg_model = VGG16(weights=None, include_top=False, input_shape=(None,None,3))
-        vgg_model.load_weights(VGG_WEIGHTS_PATH)    
-                
         #Start building model
+        vgg_model = VGG16(weights=None, include_top=False, input_shape=(None,None,3))                 
         original_input = vgg_model.input
         sub_output = vgg_model.get_layer('block5_conv3').output
         x = layers.Conv2D(512, (3, 3), strides=(1, 1), padding='same', activation='relu',
@@ -100,6 +98,7 @@ class CTPN:
         
     def predict(self, image, output_path):
         print("="*60)
+        print("Input image is "+image)
         st = time.time()
         if type(image) == str:
             img = cv2.imdecode(np.fromfile(image, dtype=np.uint8), cv2.IMREAD_COLOR)
@@ -151,8 +150,9 @@ class CTPN:
         ed = time.time()
         print("Infer time is {}s".format(ed-st))
         print("="*60)
+        return text
         # visualize
-        for i in text:
-            cv2.rectangle(img,(i[0],i[1]),(i[2],i[3]),color=(255,0,0))
-        cv2.imwrite(output_path, img)
+        # for i in text:
+        #     cv2.rectangle(img,(i[0],i[1]),(i[2],i[3]),color=(255,0,0))
+        # cv2.imwrite(output_path, img)
 

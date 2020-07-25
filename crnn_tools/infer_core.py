@@ -84,7 +84,10 @@ def cut(img_gray):
 
 
 def resize_pic(path):
-    img = cv2.imread(path)
+    if isinstance(path,str):
+        img = cv2.imread(path)
+    else:
+        img = path
     h,w,_ = img.shape
     if h!=32:
         ratio = 32/h
@@ -182,19 +185,10 @@ class CRNN:
         
     
     def predict_path(self,path):
-        a1 = time.time()
         pieces = load_picture(path)[0]
         final =[]
         for piece in pieces:
             final.append(self.predict_and_translate(piece)[0])
-        a2 = time.time()
-        timing = np.round(a2-a1,3)
-        print("="*90)
-        print("file_path is:{}".format(path))
-        print("result is:"+" ".join(final))
-        print("elapsed time is:{}s".format(timing))
-        print("="*90)
-        print("")
         return " ".join(final)
     
         
