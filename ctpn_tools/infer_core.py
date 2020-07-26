@@ -33,14 +33,19 @@ def clip_single_box(bbox, im_shape):
     return bbox
 
 
-def draw_out(rect,img):
-    left = np.min(np.array([rect[0],rect[4],rect[6],rect[4]]))
-    right = np.max(np.array([rect[0],rect[4],rect[6],rect[4]]))
-    top = np.min(np.array([rect[1],rect[3],rect[5],rect[7]]))
-    bottom = np.max(np.array([rect[1],rect[3],rect[5],rect[7]]))
-    bbox_proposal = [left,top,right,bottom]
-    bbox_proposal = clip_single_box(bbox_proposal, img.shape)
-    cv2.rectangle(img,(bbox_proposal[0],bbox_proposal[1]),(bbox_proposal[2],bbox_proposal[3]),color=(255,0,0))
+def draw_out(rect,img,mode=0):
+    if mode==0:
+        left = np.min(np.array([rect[0],rect[4],rect[6],rect[4]]))
+        right = np.max(np.array([rect[0],rect[4],rect[6],rect[4]]))
+        top = np.min(np.array([rect[1],rect[3],rect[5],rect[7]]))
+        bottom = np.max(np.array([rect[1],rect[3],rect[5],rect[7]]))
+        bbox_proposal = [left,top,right,bottom]
+        bbox_proposal = clip_single_box(bbox_proposal, img.shape)
+        cv2.rectangle(img,(bbox_proposal[0],bbox_proposal[1]),(bbox_proposal[2],bbox_proposal[3]),color=(255,0,0))
+    elif mode==1:
+        cv2.rectangle(img,(rect[0],rect[1]),(rect[2],rect[3]),color=(255,0,0))
+    else:
+        cv2.rectangle(img,(rect[4],rect[5]),(rect[6],rect[7]),color=(255,0,0))
 
 
 def extract_square(rect,img):
@@ -242,12 +247,13 @@ class CTPN:
         # text line
         textConn = TextProposalConnectorOriented()
         text = textConn.get_text_lines(select_anchor, select_score, [h, w])
+ 
         text = text.astype('int32')
         ed = time.time()
         print("dividing time is {}".format(ed-st))
         print("="*60)
         for i in text:
-            draw_out(i, img)
+            draw_out(i,img)
         cv2.imwrite(output_path, img)
         
         return [extract_square(i,img) for i in text]

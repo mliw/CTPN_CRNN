@@ -7,7 +7,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
-# Cut out the pictures
+
 def cut_out(img,rect):
     return img[rect[1]:(rect[3]+1),rect[0]:(rect[2]+1)]
 
@@ -55,11 +55,13 @@ if __name__=="__main__":
     from ctpn_tools.infer_core import CTPN 
     ctpn_model = CTPN()
     ctpn_model._load_weights("weights/CTPN.h5")    
-    pic = 'asset/original_pictures\\capm.jpg'
+    pic = 'asset/original_pictures\\chinese_text.png'
     img = cv2.imread(pic)
     my_path = "asset"
     pic_name = pic.split("\\")[1]
     text_rects = ctpn_model.predict_origin(pic, my_path+"/"+pic_name)
+    
+    
     
     text_rects_save = text_rects.copy()
     
