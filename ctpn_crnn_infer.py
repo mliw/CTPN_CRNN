@@ -26,19 +26,22 @@ def renew(path):
 
 def infer(crnn_model,ctpn_model,picture):
     img = cv2.imread(picture)
-    cv2.imwrite("asset/"+output_path+"/original.jpg",img)
     output_path = picture.split("\\")[1].split(".")[0]
     renew("asset/"+output_path)
+    cv2.imwrite("asset/"+output_path+"/original.jpg",img)
     text_rects = ctpn_model.predict(picture, "asset/"+output_path+"/detection.jpg")
     
     # Begin CRNN
     recognition_result = []
     for i in range(len(text_rects)):
         piece = cut_out(img,clip_box(list(text_rects[i]),img.shape))
-        recognition_result.append(str(i)+": "+crnn_model.predict_path(piece)+"\n")
-    re
+        recognition_result.append(str(i+1)+": "+crnn_model.predict_path(piece)+"\n")
+    final = "".join(recognition_result)
         
-        
+    # Output results
+    with open("asset/"+output_path+"/result.txt","w") as f:
+        f.writelines(final)
+    
     
 if __name__=="__main__":
     
@@ -48,35 +51,12 @@ if __name__=="__main__":
     crnn_model = CRNN()
     crnn_model._load_weights("weights/CRNN.h5")
     pictures = glob('asset/original_pictures/*')
-    
 
-    pic = 'asset/original_pictures\\chinese_text.png'
-    img = cv2.imread(pic)
-    my_path = "asset"
-    pic_name = pic.split("\\")[1]
-    text_rects = ctpn_model.predict_origin(pic, my_path+"/"+pic_name)
-    recognition_result = []
-    pieces = []
-    text_rects=sorted(text_rects,key=lambda x: ((x[1]+x[3])/2,(x[2]+x[0])/2))
-    for i in range(len(text_rects)):
-        piece = cut_out(img,clip_box(list(text_rects[i]),img.shape))
-        recognition_result.append(crnn_model.predict_path(piece))
-        pieces.append(piece)
-        
-        
-if __name__=="__main__":
 
-    ctpn_model = CTPN()
-    ctpn_model._load_weights("weights/CTPN.h5")    
-    pic = 'asset/original_pictures\\chinese_text.png'
-    img = cv2.imread(pic)
-    my_path = "asset"
-    pic_name = pic.split("\\")[1]
-    text_rects = ctpn_model.predict_origin(pic, my_path+"/"+pic_name)
-    
-    
-    
-    text_rects_save = text_rects.copy()
+    # 1 Start inference  
+    for picture in pictures:
+        infer(crnn_model,ctpn_model,picture)
+
     
     
 
