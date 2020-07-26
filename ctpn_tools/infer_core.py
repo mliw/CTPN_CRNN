@@ -14,13 +14,6 @@ IMAGE_MEAN = [123.68, 116.779, 103.939]
 IOU_SELECT = 0.7
 
 
-def draw_rect(rect, img):
-    cv2.line(img, (rect[0], rect[1]), (rect[2], rect[3]), (255, 0, 0), 2)
-    cv2.line(img, (rect[2], rect[3]), (rect[6], rect[7]), (255, 0, 0), 2)
-    cv2.line(img, (rect[6], rect[7]), (rect[4], rect[5]), (255, 0, 0), 2)
-    cv2.line(img, (rect[4], rect[5]), (rect[0], rect[1]), (255, 0, 0), 2)
-    
-
 def clip_single_box(bbox, im_shape):
     # x1 >= 0
     bbox[0] = np.maximum(np.minimum(bbox[0], im_shape[1] - 1), 0)
@@ -134,71 +127,7 @@ class CTPN:
     def _load_weights(self,path):
         self.core.load_weights(path)
         
-        
-    def predict(self, image, output_path):
-        print("="*60)
-        st = time.time()
-        if type(image) == str:
-            img = cv2.imdecode(np.fromfile(image, dtype=np.uint8), cv2.IMREAD_COLOR)
-        else:
-            img = image
-        h, w, c = img.shape
-    
-        # image size length must be greater than or equals 16 x 16, because of the image will be reduced by 16 times.
-        if h < 16 or w < 16:
-            transform_w = max(16, w)
-            transform_h = max(16, h)
-            transform_img = np.ones(shape=(transform_h, transform_w, 3), dtype='uint8') * 255
-            transform_img[:h, :w, :] = img
-            h = transform_h
-            w = transform_w
-            img = transform_img
-    
-        # zero-center by mean pixel
-        m_img = img - IMAGE_MEAN
-        m_img = np.expand_dims(m_img, axis=0)
-        cls, regr = self.core.predict_on_batch(m_img)
-        cls_prod = layers.Softmax()(cls)
-        anchor = libs.gen_anchor((int(h / 16), int(w / 16)), 16)
-        bbox = libs.bbox_transfor_inv(anchor, regr)
-        bbox = libs.clip_box(bbox, [h, w])
-    
-        # score > 0.7
-        fg = np.where(cls_prod[0, :, 1] > libs.IOU_SELECT)[0]
-        select_anchor = bbox[fg, :]
-        select_score = cls_prod.numpy()[0, fg, 1]
-        select_anchor = select_anchor.astype('int32')
-
-        # filter size
-        keep_index = libs.filter_bbox(select_anchor, 16)
-            
-        # nsm
-        select_anchor = select_anchor[keep_index]
-        select_score = select_score[keep_index]              
-        select_score = np.reshape(select_score, (select_score.shape[0], 1))
-        nmsbox = np.hstack((select_anchor, select_score))
-        keep = libs.nms(nmsbox, 0.10)
-        select_anchor = select_anchor[keep]
-        select_score = select_score[keep]
-        
-        for i in select_anchor:
-            cv2.rectangle(img,(i[0],i[1]),(i[2],i[3]),color=(255,0,0))
-        cv2.imwrite(output_path, img)
-        return select_anchor
-    
-        # text line
-        textConn = TextProposalConnectorOriented()
-        text = textConn.simple_get_text_lines(select_anchor, select_score, [h, w])
-        text = text.astype('int32')
-        ed = time.time()
-        print("Infer time is {}s".format(ed-st))
-        print("="*60)
-        # visualize
-        for i in text:
-            cv2.rectangle(img,(i[0],i[1]),(i[2],i[3]),color=(255,0,0))
-        cv2.imwrite(output_path, img)
-
-    def predict_origin(self, image, output_path=None):
+    def predict(self, image, output_path=None):
         print("="*60)
         st = time.time()
         if type(image) == str:
@@ -244,18 +173,22 @@ class CTPN:
         select_anchor = select_anchor[keep]
         select_score = select_score[keep]
         
-        # text line
+        # text rects
         textConn = TextProposalConnectorOriented()
         text = textConn.get_text_lines(select_anchor, select_score, [h, w])
- 
         text = text.astype('int32')
-        ed = time.time()
-        print("dividing time is {}".format(ed-st))
-        print("="*60)
-        for i in text:
-            draw_out(i,img)
-        cv2.imwrite(output_path, img)
+        rects = [extract_square(i,img) for i in text]
+        rects=sorted(rects,key=lambda x: ((x[1]+x[3])/2,(x[2]+x[0])/2))
         
-        return [extract_square(i,img) for i in text]
+        # time counting
+        ed = time.time()
+        print("detection time is {}".format(ed-st))
+        print("="*60)
+        
+        for num,i in enumerate(rects):
+            cv2.rectangle(img,(i[0],i[1]),(i[2],i[3]),color=(255,0,0))
+            cv2.putText(img,str(num+1),(i[0],i[3]-4),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (125, 125, 125), 2)
+        cv2.imwrite(output_path,img)
+        return rects
             
         
