@@ -21,20 +21,36 @@ def draw_rect(rect, img):
     cv2.line(img, (rect[4], rect[5]), (rect[0], rect[1]), (255, 0, 0), 2)
     
 
+def clip_single_box(bbox, im_shape):
+    # x1 >= 0
+    bbox[0] = np.maximum(np.minimum(bbox[0], im_shape[1] - 1), 0)
+    # y1 >= 0
+    bbox[1] = np.maximum(np.minimum(bbox[1], im_shape[0] - 1), 0)
+    # x2 < im_shape[1]
+    bbox[2] = np.maximum(np.minimum(bbox[2], im_shape[1] - 1), 0)
+    # y2 < im_shape[0]
+    bbox[3] = np.maximum(np.minimum(bbox[3], im_shape[0] - 1), 0)
+    return bbox
+
+
 def draw_out(rect,img):
     left = np.min(np.array([rect[0],rect[4],rect[6],rect[4]]))
     right = np.max(np.array([rect[0],rect[4],rect[6],rect[4]]))
     top = np.min(np.array([rect[1],rect[3],rect[5],rect[7]]))
     bottom = np.max(np.array([rect[1],rect[3],rect[5],rect[7]]))
-    cv2.rectangle(img,(left,top),(right,bottom),color=(255,0,0))
+    bbox_proposal = [left,top,right,bottom]
+    bbox_proposal = clip_single_box(bbox_proposal, img.shape)
+    cv2.rectangle(img,(bbox_proposal[0],bbox_proposal[1]),(bbox_proposal[2],bbox_proposal[3]),color=(255,0,0))
 
 
-def extract_square(rect):
+def extract_square(rect,img):
     left = np.min(np.array([rect[0],rect[4],rect[6],rect[4]]))
     right = np.max(np.array([rect[0],rect[4],rect[6],rect[4]]))
     top = np.min(np.array([rect[1],rect[3],rect[5],rect[7]]))
     bottom = np.max(np.array([rect[1],rect[3],rect[5],rect[7]]))
-    return (left,top,right,bottom)
+    bbox_proposal = [left,top,right,bottom]
+    bbox_proposal = clip_single_box(bbox_proposal, img.shape)
+    return bbox_proposal
 
 
 # 1 Define loss functions
@@ -147,19 +163,24 @@ class CTPN:
         select_anchor = bbox[fg, :]
         select_score = cls_prod.numpy()[0, fg, 1]
         select_anchor = select_anchor.astype('int32')
-    
+
         # filter size
         keep_index = libs.filter_bbox(select_anchor, 16)
             
         # nsm
         select_anchor = select_anchor[keep_index]
-        select_score = select_score[keep_index]
+        select_score = select_score[keep_index]              
         select_score = np.reshape(select_score, (select_score.shape[0], 1))
         nmsbox = np.hstack((select_anchor, select_score))
-        keep = libs.nms(nmsbox, 1 - libs.IOU_SELECT)
+        keep = libs.nms(nmsbox, 0.10)
         select_anchor = select_anchor[keep]
         select_score = select_score[keep]
         
+        for i in select_anchor:
+            cv2.rectangle(img,(i[0],i[1]),(i[2],i[3]),color=(255,0,0))
+        cv2.imwrite(output_path, img)
+        return select_anchor
+    
         # text line
         textConn = TextProposalConnectorOriented()
         text = textConn.simple_get_text_lines(select_anchor, select_score, [h, w])
@@ -229,8 +250,6 @@ class CTPN:
             draw_out(i, img)
         cv2.imwrite(output_path, img)
         
-        return [extract_square(i) for i in text]
+        return [extract_square(i,img) for i in text]
             
-        
-        
         

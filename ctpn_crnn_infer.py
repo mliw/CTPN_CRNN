@@ -36,7 +36,7 @@ if __name__=="__main__":
     
     
     # 1 Load weights
-    pic = 'asset/original_pictures\\pku_math.jpg'
+    pic = 'asset/original_pictures\\chinese_text.png'
     img = cv2.imread(pic)
     my_path = "asset"
     pic_name = pic.split("\\")[1]
@@ -48,4 +48,23 @@ if __name__=="__main__":
         piece = cut_out(img,clip_box(list(text_rects[i]),img.shape))
         recognition_result.append(crnn_model.predict_path(piece))
         pieces.append(piece)
+        
+        
+if __name__=="__main__":
+    from PIL import Image
+    from ctpn_tools.infer_core import CTPN 
+    ctpn_model = CTPN()
+    ctpn_model._load_weights("weights/CTPN.h5")    
+    pic = 'asset/original_pictures\\capm.jpg'
+    img = cv2.imread(pic)
+    my_path = "asset"
+    pic_name = pic.split("\\")[1]
+    text_rects = ctpn_model.predict_origin(pic, my_path+"/"+pic_name)
+    
+    text_rects_save = text_rects.copy()
+    
+    
 
+
+
+    

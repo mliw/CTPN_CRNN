@@ -2,6 +2,7 @@
 import numpy as np
 from .text_proposal_graph_builder import TextProposalGraphBuilder
 
+
 class TextProposalConnectorOriented:
     """
         Connect text proposals into text lines
@@ -40,7 +41,6 @@ class TextProposalConnectorOriented:
     def get_text_lines(self, text_proposals, scores, im_size):
         """
         text_proposals:boxes
-        
         """
         # tp=text proposal
         tp_groups=self.group_text_proposals(text_proposals, scores, im_size)#首先还是建图，获取到文本行由哪几个小框构成

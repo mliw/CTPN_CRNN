@@ -8,16 +8,16 @@ class TextProposalGraphBuilder:
         Build Text proposals into a graph.
     """
     def get_successions(self, index):
-            box=self.text_proposals[index]
-            results=[]
-            for left in range(int(box[0])+1, min(int(box[0])+TextLineCfg.MAX_HORIZONTAL_GAP+1, self.im_size[1])):
-                adj_box_indices=self.boxes_table[left]
-                for adj_box_index in adj_box_indices:
-                    if self.meet_v_iou(adj_box_index, index):
-                        results.append(adj_box_index)
-                if len(results)!=0:
-                    return results
-            return results
+        box=self.text_proposals[index]
+        results=[]
+        for left in range(int(box[0])+1, min(int(box[0])+TextLineCfg.MAX_HORIZONTAL_GAP+1, self.im_size[1])):
+            adj_box_indices=self.boxes_table[left]
+            for adj_box_index in adj_box_indices:
+                if self.meet_v_iou(adj_box_index, index):
+                    results.append(adj_box_index)
+            if len(results)!=0:
+                return results
+        return results
 
     def get_precursors(self, index):
         box=self.text_proposals[index]
