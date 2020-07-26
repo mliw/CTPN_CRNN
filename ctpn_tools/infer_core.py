@@ -21,6 +21,22 @@ def draw_rect(rect, img):
     cv2.line(img, (rect[4], rect[5]), (rect[0], rect[1]), (255, 0, 0), 2)
     
 
+def draw_out(rect,img):
+    left = np.min(np.array([rect[0],rect[4],rect[6],rect[4]]))
+    right = np.max(np.array([rect[0],rect[4],rect[6],rect[4]]))
+    top = np.min(np.array([rect[1],rect[3],rect[5],rect[7]]))
+    bottom = np.max(np.array([rect[1],rect[3],rect[5],rect[7]]))
+    cv2.rectangle(img,(left,top),(right,bottom),color=(255,0,0))
+
+
+def extract_square(rect):
+    left = np.min(np.array([rect[0],rect[4],rect[6],rect[4]]))
+    right = np.max(np.array([rect[0],rect[4],rect[6],rect[4]]))
+    top = np.min(np.array([rect[1],rect[3],rect[5],rect[7]]))
+    bottom = np.max(np.array([rect[1],rect[3],rect[5],rect[7]]))
+    return (left,top,right,bottom)
+
+
 # 1 Define loss functions
 def _rpn_loss_regr(y_true, y_pred):
     """
@@ -69,8 +85,10 @@ class CTPN:
         self._build_net()
 
     def _build_net(self):
+        vgg_model = VGG16(weights=None, include_top=False, input_shape=(None,None,3))
+        vgg_model.load_weights(VGG_WEIGHTS_PATH)    
+                
         #Start building model
-        vgg_model = VGG16(weights=None, include_top=False, input_shape=(None,None,3))                 
         original_input = vgg_model.input
         sub_output = vgg_model.get_layer('block5_conv3').output
         x = layers.Conv2D(512, (3, 3), strides=(1, 1), padding='same', activation='relu',
@@ -98,7 +116,6 @@ class CTPN:
         
     def predict(self, image, output_path):
         print("="*60)
-        print("Input image is "+image)
         st = time.time()
         if type(image) == str:
             img = cv2.imdecode(np.fromfile(image, dtype=np.uint8), cv2.IMREAD_COLOR)
@@ -150,9 +167,70 @@ class CTPN:
         ed = time.time()
         print("Infer time is {}s".format(ed-st))
         print("="*60)
-        return text
         # visualize
-        # for i in text:
-        #     cv2.rectangle(img,(i[0],i[1]),(i[2],i[3]),color=(255,0,0))
-        # cv2.imwrite(output_path, img)
+        for i in text:
+            cv2.rectangle(img,(i[0],i[1]),(i[2],i[3]),color=(255,0,0))
+        cv2.imwrite(output_path, img)
 
+    def predict_origin(self, image, output_path=None):
+        print("="*60)
+        st = time.time()
+        if type(image) == str:
+            img = cv2.imdecode(np.fromfile(image, dtype=np.uint8), cv2.IMREAD_COLOR)
+        else:
+            img = image
+        h, w, c = img.shape
+    
+        # image size length must be greater than or equals 16 x 16, because of the image will be reduced by 16 times.
+        if h < 16 or w < 16:
+            transform_w = max(16, w)
+            transform_h = max(16, h)
+            transform_img = np.ones(shape=(transform_h, transform_w, 3), dtype='uint8') * 255
+            transform_img[:h, :w, :] = img
+            h = transform_h
+            w = transform_w
+            img = transform_img
+    
+        # zero-center by mean pixel
+        m_img = img - IMAGE_MEAN
+        m_img = np.expand_dims(m_img, axis=0)
+        cls, regr = self.core.predict_on_batch(m_img)
+        cls_prod = layers.Softmax()(cls)
+        anchor = libs.gen_anchor((int(h / 16), int(w / 16)), 16)
+        bbox = libs.bbox_transfor_inv(anchor, regr)
+        bbox = libs.clip_box(bbox, [h, w])
+    
+        # score > 0.7
+        fg = np.where(cls_prod[0, :, 1] > libs.IOU_SELECT)[0]
+        select_anchor = bbox[fg, :]
+        select_score = cls_prod.numpy()[0, fg, 1]
+        select_anchor = select_anchor.astype('int32')
+    
+        # filter size
+        keep_index = libs.filter_bbox(select_anchor, 16)
+            
+        # nsm
+        select_anchor = select_anchor[keep_index]
+        select_score = select_score[keep_index]
+        select_score = np.reshape(select_score, (select_score.shape[0], 1))
+        nmsbox = np.hstack((select_anchor, select_score))
+        keep = libs.nms(nmsbox, 1 - libs.IOU_SELECT)
+        select_anchor = select_anchor[keep]
+        select_score = select_score[keep]
+        
+        # text line
+        textConn = TextProposalConnectorOriented()
+        text = textConn.get_text_lines(select_anchor, select_score, [h, w])
+        text = text.astype('int32')
+        ed = time.time()
+        print("dividing time is {}".format(ed-st))
+        print("="*60)
+        for i in text:
+            draw_out(i, img)
+        cv2.imwrite(output_path, img)
+        
+        return [extract_square(i) for i in text]
+            
+        
+        
+        
