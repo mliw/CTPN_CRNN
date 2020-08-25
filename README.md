@@ -30,3 +30,6 @@ The recognition results of each text line is as follows:
 
 <img src="https://github.com/mliw/CTPN_CRNN/blob/master/ch_pre.jpg" width="80%">
 
+&nbsp&nbsp
+
+吖 1 
