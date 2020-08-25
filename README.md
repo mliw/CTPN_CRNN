@@ -41,5 +41,5 @@ The [repo](https://github.com/mliw/CTPN) contains all the technical details of C
 
 # CRNN
 
-The [repo](https://github.com/mliw/CRNN) contains all the technical details of CRNN. Document is available at [here](https://github.com/mliw/CRNN/blob/master/CRNN.pdf).
+The [repo](https://github.com/mliw/CRNN) contains all the technical details of CRNN. Document is available at [CRNN.pdf](https://github.com/mliw/CRNN/blob/master/CRNN.pdf).
 
