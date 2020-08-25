@@ -33,3 +33,5 @@ The recognition results of each text line is as follows:
 ****
 
 # CTPN
+
+The [repo](https://github.com/mliw/CTPN) contains all the technical details of CTPN.
