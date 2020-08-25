@@ -34,4 +34,12 @@ The recognition results of each text line is as follows:
 
 # CTPN
 
-The [repo](https://github.com/mliw/CTPN) contains all the technical details of CTPN.
+The [repo](https://github.com/mliw/CTPN) contains all the technical details of CTPN. Document is not available at this stage.
+
+
+****
+
+# CRNN
+
+The [repo](https://github.com/mliw/CRNN) contains all the technical details of CRNN. Document is available at [here](https://github.com/mliw/CRNN/blob/master/CRNN.pdf).
+
