@@ -17,7 +17,7 @@ The recognition results of each text line is as follows:
 
 ## Chinese Recognition Results
 
-The input image contains English words is as follows:
+The input image contains Chinese words is as follows:
 
 <img src="https://github.com/mliw/CTPN_CRNN/blob/master/asset/capital/original.jpg" width="80%">
 
