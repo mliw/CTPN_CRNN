@@ -1,6 +1,6 @@
-## CTPN_CRNN
+# CTPN_CRNN
 
-# English Recognition Results
+## English Recognition Results
 
 The input image contains English words is as follows:
 
@@ -15,7 +15,7 @@ The recognition results of each text line is as follows:
 
 <img src="https://github.com/mliw/CTPN_CRNN/blob/master/en_pre.jpg" width="80%">
 
-# English Recognition Results
+## English Recognition Results
 
 The input image contains English words is as follows:
 
