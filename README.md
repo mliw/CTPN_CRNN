@@ -11,4 +11,4 @@ The corresponding output is as follows:
 
 The recognition results of each text line is as follows:
 
-![Image](https://github.com/mliw/CTPN_CRNN/blob/master/en_pre.jpg)
+<img src="https://github.com/mliw/CTPN_CRNN/blob/master/en_pre.jpg" width="80%">
