@@ -2,7 +2,7 @@
 
 The input image contains English words is as follows:
 
-![Image](https://github.com/mliw/CTPN_CRNN/blob/master/asset/big_econ/original.jpg){:height="50%" width="50%"}
+![Image-w150](https://github.com/mliw/CTPN_CRNN/blob/master/asset/big_econ/original.jpg)
 
 The corresponding output is as follows:
 
